@@ -1,0 +1,150 @@
+% tikz-hops v1.0 2026/10/09
+% Copyright (C) 2026 Yusuke Izawa
+% This work may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License, version 1.3c or later. Maintained by Yusuke Izawa.
+%
+% TikZ library "hops": a path hops over the saved paths it crosses.
+%
+%   \path[spath/save=fast] ...;                  % path to hop over
+%   \draw[->, hop over=fast] (a) -- (b) -| (c);  % style form
+%   \drawhop[<draw options>]{fast}{(a)--(b)-|(c)} % macro form
+%
+% Needs spath3 (tested with 2.8, 2024/05/31) and the TikZ intersections library.
+\ProvidesFile{tikzlibraryhops.code.tex}[2026/10/09 v1.0 Line hops at path crossings]
+\usetikzlibrary{spath3,intersections}
+
+% Deprecated since 1.0, use the key hops/gap. Removed in 2.0.
+\providecommand\hopgap{1.6mm}
+
+\ExplSyntaxOn
+
+\msg_new:nnn { tikz-hops } { missing-path }
+  { No~saved~path~'#1';~drawn~without~hops. }
+
+\clist_new:N \l__hops_names_clist
+\bool_new:N \l__hops_found_bool
+\dim_new:N \l__hops_gap_dim
+\dim_new:N \l__hops_height_dim
+\dim_new:N \l__hops_half_dim
+\clist_new:N \l__hops_tmpc_clist
+\tl_new:N \l__hops_tmp_tl
+\tl_new:N \l__hops_template_tl
+
+\cs_new_protected:Npn \__hops_add_names:n #1
+  {
+    \clist_set:Nn \l__hops_tmpc_clist {#1}
+    \clist_concat:NNN \l__hops_names_clist \l__hops_names_clist \l__hops_tmpc_clist
+  }
+
+\pgfkeys
+  {
+    /tikz/hops/.cd,
+    gap/.initial = \hopgap,
+    height/.initial = ,
+    shape/.initial = arc,
+    side/.initial = upright,
+    over/.code = { \__hops_add_names:n {#1} },
+  }
+
+\pgfkeys
+  {
+    /tikz/.cd,
+    hops/.code = { \pgfkeys { /tikz/hops/.cd, #1 } },
+    hop~over/.code =
+      {
+        \__hops_add_names:n {#1}
+        \use:c { tikz@addmode } { \__hops_process: }
+      },
+  }
+
+% Bump from (0,0) to (gap,0) of height #1 (negative bends to -y), in canvas
+% units. Elliptic arc as two Bezier curves, kappa = 0.5523.
+\cs_new_protected:Npn \__hops_build_arc:
+  {
+    \dim_set:Nn \l__hops_half_dim { \l__hops_gap_dim / 2 }
+    \tl_set:Nx \l__hops_template_tl
+      {
+        \exp_not:V \c_spath_moveto_tl   { 0pt } { 0pt }
+        \exp_not:V \c_spath_curvetoa_tl { 0pt } { \dim_eval:n { 0.5523 \l__hops_height_dim } }
+        \exp_not:V \c_spath_curvetob_tl
+          { \dim_eval:n { 0.4477 \l__hops_half_dim } } { \dim_use:N \l__hops_height_dim }
+        \exp_not:V \c_spath_curveto_tl  { \dim_use:N \l__hops_half_dim } { \dim_use:N \l__hops_height_dim }
+        \exp_not:V \c_spath_curvetoa_tl
+          { \dim_eval:n { 1.5523 \l__hops_half_dim } } { \dim_use:N \l__hops_height_dim }
+        \exp_not:V \c_spath_curvetob_tl
+          { \dim_use:N \l__hops_gap_dim } { \dim_eval:n { 0.5523 \l__hops_height_dim } }
+        \exp_not:V \c_spath_curveto_tl  { \dim_use:N \l__hops_gap_dim } { 0pt }
+      }
+  }
+\cs_new_protected:Npn \__hops_build_square:
+  {
+    \tl_set:Nx \l__hops_template_tl
+      {
+        \exp_not:V \c_spath_moveto_tl { 0pt } { 0pt }
+        \exp_not:V \c_spath_lineto_tl { 0pt } { \dim_use:N \l__hops_height_dim }
+        \exp_not:V \c_spath_lineto_tl { \dim_use:N \l__hops_gap_dim } { \dim_use:N \l__hops_height_dim }
+        \exp_not:V \c_spath_lineto_tl { \dim_use:N \l__hops_gap_dim } { 0pt }
+      }
+  }
+
+% Cut a gap at every boundary and fill it with the template.
+\cs_new_protected:Npn \__hops_cut_and_join:
+  {
+    \dim_set:Nn \l__hops_gap_dim { \pgfkeysvalueof { /tikz/hops/gap } }
+    \tl_set:Nx \l__hops_tmp_tl { \pgfkeysvalueof { /tikz/hops/height } }
+    \tl_if_empty:NTF \l__hops_tmp_tl
+      { \dim_set:Nn \l__hops_height_dim { \l__hops_gap_dim / 2 } }
+      { \dim_set:Nn \l__hops_height_dim { \l__hops_tmp_tl } }
+    \tikzset { spath/remove~empty~components = current }
+    \exp_args:Nx \tikzset
+      { spath/insert~gaps~after~components = { current } { \dim_use:N \l__hops_gap_dim } }
+    \tikzset { spath/remove~empty~components = current }
+    \str_case:enF { \pgfkeysvalueof { /tikz/hops/shape } }
+      {
+        { gap } { }
+        { arc } { \__hops_flip: \__hops_build_arc: \__hops_join: }
+        { square } { \__hops_flip: \__hops_build_square: \__hops_join: }
+      }
+      { \msg_error:nnn { tikz-hops } { bad-shape } { \pgfkeysvalueof { /tikz/hops/shape } } }
+  }
+\msg_new:nnn { tikz-hops } { bad-shape }
+  { Unknown~shape~'#1'.~Use~arc,~square~or~gap. }
+
+\cs_new_protected:Npn \__hops_flip:
+  {
+    \str_if_eq:eeT { \pgfkeysvalueof { /tikz/hops/side } } { right }
+      { \dim_set:Nn \l__hops_height_dim { - \l__hops_height_dim } }
+  }
+
+\cs_new_protected:Npn \__hops_join:
+  {
+    \tl_set_eq:cN { \__tikzspath_path_name:n { hops-template } } \l__hops_template_tl
+    \str_if_eq:eeTF { \pgfkeysvalueof { /tikz/hops/side } } { upright }
+      { \tikzset { spath/join~components~upright~with = { current } { hops-template } } }
+      { \tikzset { spath/join~components~with = { current } { hops-template } } }
+  }
+
+% Runs at the end of the path, before it is stroked.
+\cs_new_protected:Npn \__hops_process:
+  {
+    \clist_if_empty:NF \l__hops_names_clist
+      {
+        \bool_set_false:N \l__hops_found_bool
+        \clist_map_inline:Nn \l__hops_names_clist
+          {
+            \tl_if_exist:cTF { \__tikzspath_path_name:n {##1} }
+              {
+                \bool_set_true:N \l__hops_found_bool
+                \tikzset { spath/split~at~intersections~with = { current } {##1} }
+              }
+              { \msg_warning:nnn { tikz-hops } { missing-path } {##1} }
+          }
+        \clist_clear:N \l__hops_names_clist
+        \bool_if:NT \l__hops_found_bool { \__hops_cut_and_join: }
+      }
+  }
+
+\ExplSyntaxOff
+
+% \drawhop[<options>]{<names>}{<path>}
+\NewDocumentCommand\drawhop{O{} m m}{\draw[hop over={#2}, #1] #3;}

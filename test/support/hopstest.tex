@@ -1,0 +1,57 @@
+% Test helper, not part of the package.
+% Keys, used after hop over: report=<label> logs the number of moveto, lineto
+% and curveto operations and the bounding box of the current path.
+% snapshot=<name> stores the path, \hopsassertsame{a}{b} logs whether two
+% snapshots are equal.
+\ExplSyntaxOn
+\tl_new:N \l__hopstest_path_tl
+\int_new:N \l__hopstest_m_int
+\int_new:N \l__hopstest_l_int
+\int_new:N \l__hopstest_c_int
+\cs_new_protected:Npn \__hopstest_get:
+  { \spath_get_current_path:N \l__hopstest_path_tl }
+\cs_new_protected:Npn \__hopstest_report:n #1
+  {
+    \__hopstest_get:
+    \int_zero:N \l__hopstest_m_int
+    \int_zero:N \l__hopstest_l_int
+    \int_zero:N \l__hopstest_c_int
+    \tl_map_inline:Nn \l__hopstest_path_tl
+      {
+        \tl_set:Nn \l_tmpa_tl {##1}
+        \tl_if_eq:NNT \l_tmpa_tl \c_spath_moveto_tl { \int_incr:N \l__hopstest_m_int }
+        \tl_if_eq:NNT \l_tmpa_tl \c_spath_lineto_tl { \int_incr:N \l__hopstest_l_int }
+        \tl_if_eq:NNT \l_tmpa_tl \c_spath_curveto_tl { \int_incr:N \l__hopstest_c_int }
+      }
+    \spath_minbb:NV \l_tmpa_tl \l__hopstest_path_tl
+    \spath_maxbb:NV \l_tmpb_tl \l__hopstest_path_tl
+    \iow_term:x
+      {
+        hops-test~#1:~moves=\int_use:N \l__hopstest_m_int\c_space_tl
+        lines=\int_use:N \l__hopstest_l_int\c_space_tl
+        curves=\int_use:N \l__hopstest_c_int\c_space_tl
+        min=(\tl_item:Nn \l_tmpa_tl {1},\tl_item:Nn \l_tmpa_tl {2})\c_space_tl
+        max=(\tl_item:Nn \l_tmpb_tl {1},\tl_item:Nn \l_tmpb_tl {2})
+      }
+  }
+\cs_new_protected:Npn \__hopstest_snapshot:n #1
+  {
+    \__hopstest_get:
+    \tl_gset_eq:cN { g__hopstest_snap_#1_tl } \l__hopstest_path_tl
+  }
+\NewDocumentCommand \hopsassertsame { m m }
+  {
+    \iow_term:x
+      {
+        hops-test~same~#1~#2:~
+        \tl_if_eq:ccTF { g__hopstest_snap_#1_tl } { g__hopstest_snap_#2_tl }
+          { yes } { NO }
+      }
+  }
+\pgfkeys
+  {
+    /tikz/.cd,
+    report/.code = { \use:c { tikz@addmode } { \__hopstest_report:n {#1} } },
+    snapshot/.code = { \use:c { tikz@addmode } { \__hopstest_snapshot:n {#1} } },
+  }
+\ExplSyntaxOff

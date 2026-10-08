@@ -1,0 +1,44 @@
+% tikz-hops v1.0 2026/10/09
+% Copyright (C) 2026 Yusuke Izawa
+% This work may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License, version 1.3c or later. Maintained by Yusuke Izawa.
+% All cases on one page for a visual pass. Build: TEXINPUTS=..: latexmk -pdf visual.tex
+\documentclass[a4paper]{article}
+\usepackage[margin=15mm]{geometry}
+\usepackage{tikz-hops}
+\usetikzlibrary{arrows.meta}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\newcommand\case[2]{\begin{minipage}[t]{0.31\linewidth}\textsf{\scriptsize #1}\par\medskip #2\end{minipage}\hfill}
+\begin{document}
+\case{t01 basic}{\begin{tikzpicture}\path[spath/save=v](1,-1)--(1,1);\draw[gray](1,-1)--(1,1);
+ \draw[hop over=v](0,0)--(2,0);\end{tikzpicture}}
+\case{t03 multi}{\begin{tikzpicture}\path[spath/save=a](1,-1)--(1,1);\path[spath/save=b](2,-1)--(2,1);
+ \draw[gray](1,-1)--(1,1)(2,-1)--(2,1);\draw[hop over={a,b}](0,0)--(3,0);\end{tikzpicture}}
+\case{t04 shapes}{\begin{tikzpicture}\path[spath/save=v](1,-1)--(1,1);\draw[gray](1,-1)--(1,1);
+ \draw[hop over=v](0,.8)--(2,.8);\draw[hop over=v,hops/shape=square](0,.4)--(2,.4);
+ \draw[hop over=v,hops/shape=gap](0,0)--(2,0);\draw[hop over=v,hops/height=2mm](0,-.4)--(2,-.4);\end{tikzpicture}}
+\par\bigskip
+\case{t05 sides, rows upright left right}{\begin{tikzpicture}[scale=.5]
+ \foreach \s [count=\i from 0] in {upright,left,right} {\begin{scope}[shift={(0,-\i*3)}]
+ \path[spath/save=ve](0,-1)--(0,1);\draw[gray](0,-1)--(0,1);
+ \draw[hop over=ve,hops/side=\s,->](-1,0)--(1,0);\draw[hop over=ve,hops/side=\s,->](1,.5)--(-1,.5);
+ \end{scope}\begin{scope}[shift={(3,-\i*3)}]
+ \path[spath/save=he](-1,0)--(1,0);\draw[gray](-1,0)--(1,0);
+ \draw[hop over=he,hops/side=\s,->](-.5,-1)--(-.5,1);\draw[hop over=he,hops/side=\s,->](.5,1)--(.5,-1);
+ \end{scope}}\end{tikzpicture}}
+\case{t06 arrows}{\begin{tikzpicture}\path[spath/save=v](1,-1)--(1,1);\draw[gray](1,-1)--(1,1);
+ \draw[->,hop over=v](0,.5)--(2,.5);\draw[<->,hop over=v](0,0)--(2,0);
+ \draw[-{Stealth[length=2mm]},hop over=v](0,-.5)--(2,-.5);\end{tikzpicture}}
+\case{t07 transform}{\begin{tikzpicture}\begin{scope}[shift={(.5,.5)},rotate=30,scale=1.5]
+ \path[spath/save=v](1,-1)--(1,1);\draw[gray](1,-1)--(1,1);\draw[hop over=v](0,0)--(2,0);
+ \end{scope}\end{tikzpicture}}
+\par\bigskip
+\case{t08 near end and close}{\begin{tikzpicture}\path[spath/save=v](.05,-1)--(.05,1);
+ \path[spath/save=w](1,-1)--(1,1);\path[spath/save=w2](1.1,-1)--(1.1,1);
+ \draw[gray](.05,-1)--(.05,1)(1,-1)--(1,1)(1.1,-1)--(1.1,1);
+ \draw[hop over=v](0,0)--(2,0);\draw[hop over={w,w2}](0,.5)--(2,.5);\end{tikzpicture}}
+\case{t11 figure 1}{\begin{tikzpicture}[scale=.5]\path[spath/save=fast](0,0)-|(3,-3);
+ \draw[gray,dotted,thick](0,0)-|(3,-3);
+ \drawhop[gray,thick]{fast}{(3.5,.5)--(3.5,-1)-|(1,-2)}\end{tikzpicture}}
+\end{document}

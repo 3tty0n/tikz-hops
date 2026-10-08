@@ -1,0 +1,6 @@
+This is a generated file for the l3build validation system.
+Don't change this file in any respect.
+hops-test ab: moves=1 lines=3 curves=4 min=(0.0pt,0.0pt) max=(113.81097pt,2.27623pt)
+hops-test abc: moves=1 lines=4 curves=6 min=(0.0pt,14.22636pt) max=(113.81097pt,16.5026pt)
+hops-test twice: moves=1 lines=3 curves=4 min=(0.0pt,-14.22636pt) max=(113.81097pt,-11.95013pt)
+hops-test same macro style: yes

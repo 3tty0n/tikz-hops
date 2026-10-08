@@ -1,0 +1,20 @@
+\input regression-test.tex
+\documentclass{article}
+\pagestyle{empty}
+\usepackage{tikz-hops}
+\input{hopstest.tex}
+\begin{document}
+\START
+\begin{tikzpicture}
+\foreach \s [count=\i from 0] in {upright,left,right} {
+  \begin{scope}[shift={(\i*3,0)}]
+  \path[spath/save=ve] (0,-1) -- (0,1);
+  \path[spath/save=he] (-1,0) -- (1,0);
+  \draw[hop over=ve, hops/side=\s, report=\s-E] (-1,0) -- (1,0);
+  \draw[hop over=ve, hops/side=\s, report=\s-W] (1,-0.3) -- (-1,-0.3);
+  \draw[hop over=he, hops/side=\s, report=\s-N] (0.5,-1) -- (0.5,1);
+  \draw[hop over=he, hops/side=\s, report=\s-S] (-0.5,1) -- (-0.5,-1);
+  \end{scope}}
+\end{tikzpicture}
+\OMIT\clearpage\TIMO
+\END

@@ -1,0 +1,149 @@
+% tikz-hops v1.0 2026/10/09
+% Copyright (C) 2026 Yusuke Izawa
+% This work may be distributed and/or modified under the conditions of the
+% LaTeX Project Public License, version 1.3c or later. Maintained by Yusuke Izawa.
+\documentclass[a4paper]{article}
+\usepackage[margin=25mm]{geometry}
+\usepackage{tikz-hops}
+\usetikzlibrary{arrows.meta}
+\usepackage{fancyvrb,booktabs,array,hyperref}
+\newcommand\key[1]{\texttt{#1}}
+\newcommand\pkg[1]{\textsf{#1}}
+\newenvironment{example}
+  {\VerbatimOut{\jobname.ex}}
+  {\endVerbatimOut\par\medskip\noindent
+   \VerbatimInput[frame=single,fontsize=\small]{\jobname.ex}\par\smallskip
+   \noindent\input{\jobname.ex}\par\medskip}
+\title{The \pkg{tikz-hops} package\\\large Line hops at path crossings for TikZ}
+\author{Yusuke Izawa}
+\date{v1.0, 2026/10/09}
+\begin{document}
+\maketitle
+
+\section{What it does}
+A path drawn with \key{hop over} cuts a gap at every crossing with a saved
+path and fills the gap with a small arc.
+The package is a TikZ library built on \pkg{spath3}.
+It needs TeX Live 2022 or later and \pkg{spath3} 2.8 or later.
+
+\begin{Verbatim}[frame=single,fontsize=\small]
+\usepackage{tikz-hops}      % or \usetikzlibrary{hops}
+\end{Verbatim}
+\noindent This is the only line to add to a preamble. It loads
+\pkg{tikz} and the library \texttt{hops}.
+
+\section{Usage}
+Save the path to hop over with \key{spath/save}, then name it in
+\key{hop over}.
+The saved path may be drawn or not.
+
+\begin{example}
+\begin{tikzpicture}
+  \draw[thick, spath/save=wire] (1,-1) -- (1,1);
+  \draw[->, hop over=wire] (0,0) -- (3,0);
+\end{tikzpicture}
+\end{example}
+
+\key{hop over} takes a comma list.
+All crossings are processed in one pass, so the result does not depend on the
+order of the names.
+
+\begin{example}
+\begin{tikzpicture}
+  \path[spath/save=a] (1,-1) -- (1,1);
+  \path[spath/save=b] (2,-1) -- (2,1);
+  \draw[gray] (1,-1) -- (1,1) (2,-1) -- (2,1);
+  \draw[hop over={a,b}] (0,0) -- (3,0);
+\end{tikzpicture}
+\end{example}
+
+The macro \verb|\drawhop| is a shorthand.
+\begin{Verbatim}[frame=single,fontsize=\small]
+\drawhop[<options>]{<names>}{<path>}
+=  \draw[hop over={<names>}, <options>] <path>;
+\end{Verbatim}
+It keeps the calling convention of the first version of this code.
+
+\begin{example}
+\begin{tikzpicture}
+  \path[spath/save=wire] (1,-1) -- (1,1);
+  \drawhop[red]{wire}{(0,0) -- (2,0)}
+\end{tikzpicture}
+\end{example}
+
+\section{Keys}
+All keys live in \texttt{/tikz/hops/}.
+Write \verb|hops/gap=2mm| inside any \verb|\draw| option list, or group keys
+with \verb|hops={gap=2mm, shape=square}|.
+Keys are read when the path ends, so their position in the option list does not
+matter.
+
+\begin{center}
+\begin{tabular}{@{}>{\ttfamily}l>{\ttfamily}l p{0.45\linewidth}@{}}
+\toprule
+Key & Default & Meaning\\
+\midrule
+hop over=<names> & & Comma list of saved paths to hop over. Starts the hops.\\
+hops/gap=<dim> & 1.6mm & Chord length cut at each crossing. Smaller than the distance between crossings.\\
+hops/height=<dim> & gap/2 & Apex height of the hop. The default is a semicircle.\\
+hops/shape=arc|square|gap & arc & \texttt{gap} cuts without inserting anything.\\
+hops/side=upright|left|right & upright & Side of the bump, see below.\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Lengths are canvas lengths. They are not changed by \verb|scale| or other
+coordinate transformations, like \key{line width}.
+
+\begin{example}
+\begin{tikzpicture}
+  \path[spath/save=v] (1,-1) -- (1,1);
+  \draw[gray] (1,-1) -- (1,1);
+  \draw[hop over=v, hops/gap=4mm]                    (0, .8) -- (2, .8);
+  \draw[hop over=v, hops/gap=4mm, hops/height=1mm]   (0, .4) -- (2, .4);
+  \draw[hop over=v, hops={gap=4mm, shape=square}]    (0,  0) -- (2,  0);
+  \draw[hop over=v, hops={gap=4mm, shape=gap}]       (0,-.4) -- (2,-.4);
+\end{tikzpicture}
+\end{example}
+
+\subsection{Side}
+\key{left} and \key{right} are relative to the direction of travel.
+\key{upright} keeps the bump upward on horizontal segments. On vertical
+segments it bends to the left of the direction of travel.
+
+\begin{example}
+\begin{tikzpicture}
+  \path[spath/save=v] (1,-1) -- (1,1);
+  \draw[gray] (1,-1) -- (1,1);
+  \foreach \s [count=\i] in {upright,left,right}
+    \draw[hop over=v, hops/side=\s] (0,1-\i*.5) -- (2,1-\i*.5);
+\end{tikzpicture}
+\end{example}
+
+\section{Limits}
+\begin{itemize}
+\item The drawn path is one connected path. A path with several subpaths gets
+  a gap between them.
+\item A crossing closer to a path end than \key{gap}/2, and two crossings
+  closer than \key{gap}, are not handled. The line is cut without a hop.
+  Reduce \key{gap} or move the crossing.
+\item A crossing at a corner of the path gives a diagonal chord.
+\item The gap is measured along the path and the hop is placed on the chord.
+  On strongly curved paths use a small \key{gap}.
+\item Self-crossings are not supported.
+\item A name that is not a saved path gives the warning
+  \texttt{Package tikz-hops Warning} and the path is drawn without hops.
+\item Arrow tips come from the \verb|\draw| options and appear only at the path ends.
+\end{itemize}
+
+\section{Related packages}
+The \texttt{knots} library of \pkg{spath3} cuts over/under gaps without hops.
+\pkg{circuitikz} has a \texttt{jump crossing} component for circuit wires.
+
+\section{Deprecated}
+\verb|\hopgap| is the former default gap. Redefine it to change the default
+\key{hops/gap}. It is removed in 2.0.
+
+\section{License}
+LaTeX Project Public License 1.3c or later.
+\end{document}

@@ -1,0 +1,13 @@
+\input regression-test.tex
+\documentclass{article}
+\pagestyle{empty}
+\usepackage{tikz-hops}
+\input{hopstest.tex}
+\begin{document}
+\START
+\begin{tikzpicture}
+\path[spath/save=fast] (0,0) -| (3,-3);
+\drawhop[line width=1pt, gray, report=fig1]{fast}{(3.5,0.5)--(3.5,-1)-|(1,-2)}
+\end{tikzpicture}
+\OMIT\clearpage\TIMO
+\END

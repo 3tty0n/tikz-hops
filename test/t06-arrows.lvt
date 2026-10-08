@@ -1,0 +1,16 @@
+\input regression-test.tex
+\documentclass{article}
+\pagestyle{empty}
+\usepackage{tikz-hops}
+\usetikzlibrary{arrows.meta}
+\input{hopstest.tex}
+\begin{document}
+\START
+\begin{tikzpicture}
+\path[spath/save=v] (1,-1) -- (1,1);
+\draw[->, hop over=v, report=to] (0,0) -- (2,0);
+\draw[<->, hop over=v, report=both] (0,0.5) -- (2,0.5);
+\draw[-{Stealth[length=2mm]}, hop over=v, report=stealth] (0,1) -- (2,1);
+\end{tikzpicture}
+\OMIT\clearpage\TIMO
+\END

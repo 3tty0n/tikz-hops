@@ -1,0 +1,13 @@
+\input regression-test.tex
+\documentclass{article}
+\pagestyle{empty}
+\usepackage{tikz-hops}
+\input{hopstest.tex}
+\begin{document}
+\START
+\begin{tikzpicture}
+\path[spath/save=v] (1,-1) -- (1,1);
+\draw[hop over=v, report=basic] (0,0) -- (2,0);
+\end{tikzpicture}
+\OMIT\clearpage\TIMO
+\END

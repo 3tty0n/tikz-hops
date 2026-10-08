@@ -1,0 +1,20 @@
+\input regression-test.tex
+\documentclass{article}
+\pagestyle{empty}
+\usepackage{tikz-hops}
+\input{hopstest.tex}
+\begin{document}
+\START
+\begin{tikzpicture}
+\path[spath/save=a] (1,-1) -- (1,1);
+\path[spath/save=b] (2,-1) -- (2,1);
+\path[spath/save=c] (3,-1) -- (3,1);
+\draw[hop over={a,b}, report=ab] (0,0) -- (4,0);
+\draw[hop over={a,b,c}, report=abc] (0,0.5) -- (4,0.5);
+\draw[hop over=a, hop over=b, report=twice] (0,-0.5) -- (4,-0.5);
+\drawhop[snapshot=macro]{a,b,c}{(0,0.7) -- (4,0.7)}
+\draw[hop over={a,b,c}, snapshot=style] (0,0.7) -- (4,0.7);
+\hopsassertsame{macro}{style}
+\end{tikzpicture}
+\OMIT\clearpage\TIMO
+\END

@@ -1,0 +1,8 @@
+This is a generated file for the l3build validation system.
+Don't change this file in any respect.
+hops-test plain: moves=1 lines=1 curves=0 min=(56.90549pt,0.0pt) max=(85.35823pt,0.0pt)
+hops-test zero: moves=1 lines=1 curves=0 min=(56.90549pt,0.0pt) max=(85.35823pt,0.0pt)
+hops-test same plain hop: yes
+Package tikz-hops Warning: No saved path 'nosuch'; drawn without hops.
+hops-test missing: moves=1 lines=1 curves=0 min=(0.0pt,56.90549pt) max=(56.90549pt,56.90549pt)
+hops-test after: moves=1 lines=1 curves=0 min=(0.0pt,71.13185pt) max=(56.90549pt,71.13185pt)

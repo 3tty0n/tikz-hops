@@ -1,0 +1,19 @@
+\input regression-test.tex
+\documentclass{article}
+\pagestyle{empty}
+\usepackage{tikz-hops}
+\input{hopstest.tex}
+\begin{document}
+\START
+\begin{tikzpicture}
+\path[spath/save=v] (1,-1) -- (1,1);
+\gdef\hopgap{3mm}
+\draw[hop over=v, snapshot=old] (0,0) -- (2,0);
+\gdef\hopgap{1.6mm}
+\draw[hop over=v, hops/gap=3mm, snapshot=new] (0,0) -- (2,0);
+\hopsassertsame{old}{new}
+\drawhop[hops/gap=3mm,snapshot=macro]{v}{(0,0) -- (2,0)}
+\hopsassertsame{new}{macro}
+\end{tikzpicture}
+\OMIT\clearpage\TIMO
+\END

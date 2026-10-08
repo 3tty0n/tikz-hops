@@ -1,0 +1,17 @@
+\input regression-test.tex
+\documentclass{article}
+\pagestyle{empty}
+\usepackage{tikz-hops}
+\input{hopstest.tex}
+\begin{document}
+\START
+\begin{tikzpicture}
+\path[spath/save=v] (1,-1) -- (1,1);
+\draw[hop over=v, report=arc] (0,0) -- (2,0);
+\draw[hop over=v, hops/shape=square, report=square] (0,0.5) -- (2,0.5);
+\draw[hop over=v, hops/shape=gap, report=gap] (0,1) -- (2,1);
+\draw[hop over=v, hops/height=2mm, report=high] (0,-0.5) -- (2,-0.5);
+\draw[hop over=v, hops={gap=3mm, shape=square, height=1mm}, report=combo] (0,-1) -- (2,-1);
+\end{tikzpicture}
+\OMIT\clearpage\TIMO
+\END
